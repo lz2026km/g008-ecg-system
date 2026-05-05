@@ -20,6 +20,15 @@ const CriticalValuePage: React.FC = () => {
   const [examTypeFilter, setExamTypeFilter] = useState<ExamType>('全部')
   const [selectedRecord, setSelectedRecord] = useState<CriticalECGRecord | null>(null)
   const [showModal, setShowModal] = useState(false)
+  // 通知弹窗状态
+  const [notifyModal, setNotifyModal] = useState(false)
+  const [notifyRecord, setNotifyRecord] = useState<CriticalECGRecord | null>(null)
+  const [notifyPhone, setNotifyPhone] = useState('')
+  const [notifyNote, setNotifyNote] = useState('')
+  // 处理弹窗状态
+  const [processModal, setProcessModal] = useState(false)
+  const [processRecord, setProcessRecord] = useState<CriticalECGRecord | null>(null)
+  const [processResult, setProcessResult] = useState('')
 
   // 统计数据
   const stats = useMemo(() => {
@@ -44,12 +53,33 @@ const CriticalValuePage: React.FC = () => {
   // 操作处理
   const handleNotify = (e: React.MouseEvent, record: CriticalECGRecord) => {
     e.stopPropagation()
-    alert(`通知临床医生：${record.patientName} 的 ${record.criticalType}`)
+    setNotifyRecord(record)
+    setNotifyPhone('')
+    setNotifyNote('')
+    setNotifyModal(true)
   }
 
   const handleProcess = (e: React.MouseEvent, record: CriticalECGRecord) => {
     e.stopPropagation()
-    alert(`处理危急值：${record.examId}`)
+    setProcessRecord(record)
+    setProcessResult('')
+    setProcessModal(true)
+  }
+
+  const submitNotify = () => {
+    if (!notifyRecord) return
+    const idx = criticalECGRecords.findIndex(r => r.id === notifyRecord.id)
+    if (idx !== -1) criticalECGRecords[idx] = { ...criticalECGRecords[idx], status: '已通知' }
+    setNotifyModal(false)
+    setTimeout(() => window.location.reload(), 300)
+  }
+
+  const submitProcess = () => {
+    if (!processRecord) return
+    const idx = criticalECGRecords.findIndex(r => r.id === processRecord.id)
+    if (idx !== -1) criticalECGRecords[idx] = { ...criticalECGRecords[idx], status: '已处理', handleTime: new Date().toLocaleString() }
+    setProcessModal(false)
+    setTimeout(() => window.location.reload(), 300)
   }
 
   const handleDetail = (record: CriticalECGRecord) => {
@@ -313,40 +343,10 @@ const CriticalValuePage: React.FC = () => {
 
       {/* 详情弹窗 */}
       {showModal && selectedRecord && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-          onClick={closeModal}
-        >
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: '12px',
-              width: '700px',
-              maxHeight: '90vh',
-              overflow: 'auto',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-            }}
-            onClick={e => e.stopPropagation()}
-          >
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={closeModal}>
+          <div style={{ background: '#fff', borderRadius: '12px', width: '700px', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
             {/* 弹窗头部 */}
-            <div style={{
-              padding: '20px 24px',
-              borderBottom: '1px solid #e5e7eb',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#dc2626', margin: 0 }}>
                 ⚠️ 危急值详情
               </h2>
@@ -462,6 +462,66 @@ const CriticalValuePage: React.FC = () => {
                 }}>
                   {selectedRecord.outcome}
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 通知弹窗 */}
+      {notifyModal && notifyRecord && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }} onClick={() => setNotifyModal(false)}>
+          <div style={{ background: '#fff', borderRadius: 12, width: 480, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '20px 24px', borderBottom: '2px solid #dc2626', background: '#dc2626', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 16, fontWeight: 600 }}>📞 通知临床医生</span>
+              <button onClick={() => setNotifyModal(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer' }}>×</button>
+            </div>
+            <div style={{ padding: 24 }}>
+              <div style={{ marginBottom: 16, padding: 12, background: '#fef2f2', borderRadius: 8, border: '1px solid #fecaca' }}>
+                <div style={{ fontSize: 14, color: '#991b1b' }}>
+                  <strong>{notifyRecord.patientName}</strong> · {notifyRecord.criticalType}<br/>
+                  科室：{notifyRecord.dept} · 数值：<strong>{notifyRecord.value}</strong>
+                </div>
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 6 }}>通知电话</label>
+                <input value={notifyPhone} onChange={e => setNotifyPhone(e.target.value)} placeholder="请输入接收人电话..." style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14, outline: 'none' }} />
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 6 }}>备注</label>
+                <textarea value={notifyNote} onChange={e => setNotifyNote(e.target.value)} placeholder="记录通知情况..." style={{ width: '100%', minHeight: 80, padding: 10, border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14, resize: 'vertical', outline: 'none' }} />
+              </div>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                <button onClick={() => setNotifyModal(false)} style={{ padding: '8px 20px', border: '1px solid #d1d5db', borderRadius: 6, background: '#fff', fontSize: 14, cursor: 'pointer' }}>取消</button>
+                <button onClick={submitNotify} style={{ padding: '8px 20px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: 6, fontSize: 14, cursor: 'pointer' }}>确认通知</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 处理弹窗 */}
+      {processModal && processRecord && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }} onClick={() => setProcessModal(false)}>
+          <div style={{ background: '#fff', borderRadius: 12, width: 480, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '20px 24px', borderBottom: '2px solid #10b981', background: '#10b981', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 16, fontWeight: 600 }}>✅ 处理危急值</span>
+              <button onClick={() => setProcessModal(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer' }}>×</button>
+            </div>
+            <div style={{ padding: 24 }}>
+              <div style={{ marginBottom: 16, padding: 12, background: '#ecfdf5', borderRadius: 8, border: '1px solid #a7f3d0' }}>
+                <div style={{ fontSize: 14, color: '#065f46' }}>
+                  <strong>{processRecord.patientName}</strong> · {processRecord.criticalType}<br/>
+                  检查ID：{processRecord.examId} · 科室：{processRecord.dept}
+                </div>
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 6 }}>处理结果</label>
+                <textarea value={processResult} onChange={e => setProcessResult(e.target.value)} placeholder="请输入处理结果..." style={{ width: '100%', minHeight: 100, padding: 10, border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14, resize: 'vertical', outline: 'none' }} />
+              </div>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                <button onClick={() => setProcessModal(false)} style={{ padding: '8px 20px', border: '1px solid #d1d5db', borderRadius: 6, background: '#fff', fontSize: 14, cursor: 'pointer' }}>取消</button>
+                <button onClick={submitProcess} style={{ padding: '8px 20px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, fontSize: 14, cursor: 'pointer' }}>确认处理</button>
               </div>
             </div>
           </div>

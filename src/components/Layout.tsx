@@ -61,7 +61,7 @@ export default function Layout() {
       <aside style={{ width: 220, background: '#1e3a5f', color: '#fff', padding: '16px 0', position: 'fixed', height: '100vh', overflowY: 'auto' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: 16 }}>
           <h1 style={{ fontSize: 18, fontWeight: 600 }}>全院心电系统</h1>
-          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>G008 · v0.2.0</div>
+          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>G008 · v0.3.0</div>
         </div>
         <nav>
           {navItems.map(item => {

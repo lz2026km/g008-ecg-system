@@ -247,11 +247,19 @@ export default function TodoCenterPage() {
     }
   }
 
+  // 批量处理确认弹窗状态
+  const [batchModal, setBatchModal] = useState<{ action: 'complete' | 'cancel' } | null>(null)
+
   // 批量处理
   const batchProcess = (action: 'complete' | 'cancel') => {
     if (selectedItems.size === 0) return
-    alert(`${action === 'complete' ? '完成' : '取消'}了 ${selectedItems.size} 项待办`)
+    setBatchModal({ action })
+  }
+
+  const confirmBatch = () => {
+    if (!batchModal) return
     setSelectedItems(new Set())
+    setBatchModal(null)
   }
 
   // 获取类型图标和颜色
@@ -729,6 +737,27 @@ export default function TodoCenterPage() {
           ))}
         </div>
       </div>
+
+      {/* 批量处理确认弹窗 */}
+      {batchModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+          <div style={{ background: '#fff', borderRadius: 12, width: 400, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <div style={{ padding: '24px', textAlign: 'center' }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>{batchModal.action === 'complete' ? '✅' : '❌'}</div>
+              <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: '#1e293b' }}>
+                确认{batchModal.action === 'complete' ? '完成' : '取消'} {selectedItems.size} 项待办？
+              </div>
+              <div style={{ fontSize: 14, color: '#64748b', marginBottom: 24 }}>
+                {batchModal.action === 'complete' ? '选中的待办事项将被标记为已完成' : '选中的待办事项将被取消'}
+              </div>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                <button onClick={() => setBatchModal(null)} style={{ padding: '8px 24px', border: '1px solid #d1d5db', borderRadius: 6, background: '#fff', fontSize: 14, cursor: 'pointer' }}>取消</button>
+                <button onClick={confirmBatch} style={{ padding: '8px 24px', background: batchModal.action === 'complete' ? '#10b981' : '#6b7280', color: '#fff', border: 'none', borderRadius: 6, fontSize: 14, cursor: 'pointer' }}>确认</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

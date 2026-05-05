@@ -590,7 +590,7 @@ export default function HQPage() {
 
       {/* 底部时间戳 */}
       <div style={{ marginTop: 24, textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
-        数据更新时间: {new Date().toLocaleString('zh-CN')} · 全院心电信息系统 v0.2.0
+        数据更新时间: {new Date().toLocaleString('zh-CN')} · 全院心电信息系统 v0.3.0
       </div>
     </div>
   )

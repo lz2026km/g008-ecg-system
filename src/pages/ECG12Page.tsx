@@ -1272,6 +1272,7 @@ const ECGDetailModal: React.FC<ECGDetailModalProps> = ({ record, visible, onClos
         visible={printPreviewVisible}
         onClose={() => setPrintPreviewVisible(false)}
       />
+
     </>
   );
 };
@@ -1342,14 +1343,6 @@ const ECG12Page: React.FC = () => {
   const handleCloseModal = () => {
     setModalVisible(false);
     setSelectedRecord(null);
-  };
-
-  const handleWriteReport = (record: ECG12Record) => {
-    alert(`书写报告: ${record.examId}`);
-  };
-
-  const handleAudit = (record: ECG12Record) => {
-    alert(`审核报告: ${record.examId}`);
   };
 
   const handlePrint = (record: ECG12Record) => {
@@ -1520,6 +1513,60 @@ const ECG12Page: React.FC = () => {
     marginRight: '8px',
   };
 
+  // 书写报告弹窗状态
+  const [writeModalVisible, setWriteModalVisible] = useState(false);
+  const [writeRecord, setWriteRecord] = useState<ECG12Record | null>(null);
+  const [reportContent, setReportContent] = useState('');
+  // 审核弹窗状态
+  const [auditModalVisible, setAuditModalVisible] = useState(false);
+  const [auditRecord, setAuditRecord] = useState<ECG12Record | null>(null);
+  const [auditOpinion, setAuditOpinion] = useState('');
+
+  const handleWriteReport = (record: ECG12Record) => {
+    setWriteRecord(record);
+    setReportContent(`【心电图报告】
+患者：${record.patientName} ${record.gender}/${record.age}岁
+检查ID：${record.examId}
+检查类型：${record.examType}
+检查时间：${record.reportTime}
+设备：${record.device}
+
+【诊断】
+${record.diagnosis}
+
+【心率】
+${record.heartRate} bpm
+
+【报告医生】
+${record.doctor}
+
+【技术员】
+${record.technician}`);
+    setWriteModalVisible(true);
+  };
+
+  const handleAudit = (record: ECG12Record) => {
+    setAuditRecord(record);
+    setAuditOpinion('');
+    setAuditModalVisible(true);
+  };
+
+  const submitReport = () => {
+    if (!writeRecord) return;
+    const idx = ecg12Records.findIndex(r => r.id === writeRecord.id);
+    if (idx !== -1) ecg12Records[idx] = { ...ecg12Records[idx], status: '待审核' };
+    setWriteModalVisible(false);
+    setTimeout(() => window.location.reload(), 300);
+  };
+
+  const submitAudit = (pass: boolean) => {
+    if (!auditRecord) return;
+    const idx = ecg12Records.findIndex(r => r.id === auditRecord.id);
+    if (idx !== -1) ecg12Records[idx] = { ...ecg12Records[idx], status: pass ? '已审核' : '待报告' };
+    setAuditModalVisible(false);
+    setTimeout(() => window.location.reload(), 300);
+  };
+
   return (
     <div style={containerStyle}>
       <h1 style={titleStyle}>12导联心电图</h1>
@@ -1687,6 +1734,69 @@ const ECG12Page: React.FC = () => {
         visible={modalVisible}
         onClose={handleCloseModal}
       />
+
+      {/* 书写报告弹窗 */}
+      {writeModalVisible && writeRecord && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }} onClick={() => setWriteModalVisible(false)}>
+          <div style={{ background: '#fff', borderRadius: 12, width: 680, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '20px 24px', borderBottom: '2px solid #1e40af', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#1e40af', color: '#fff' }}>
+              <span style={{ fontSize: 16, fontWeight: 600 }}>📝 书写报告 — {writeRecord.examId}</span>
+              <button onClick={() => setWriteModalVisible(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer' }}>×</button>
+            </div>
+            <div style={{ padding: 24 }}>
+              <div style={{ marginBottom: 16, padding: 12, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: 14, color: '#475569' }}>
+                  <strong>{writeRecord.patientName}</strong> · {writeRecord.gender}/{writeRecord.age}岁 · {writeRecord.dept}<br/>
+                  检查类型：{writeRecord.examType} · 心率：{writeRecord.heartRate} bpm · 诊断：{writeRecord.diagnosis}
+                </div>
+              </div>
+              <textarea
+                value={reportContent}
+                onChange={e => setReportContent(e.target.value)}
+                style={{ width: '100%', minHeight: 360, padding: 16, border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14, fontFamily: 'monospace', resize: 'vertical', outline: 'none' }}
+              />
+              <div style={{ display: 'flex', gap: 12, marginTop: 16, justifyContent: 'flex-end' }}>
+                <button onClick={() => setWriteModalVisible(false)} style={{ padding: '8px 20px', border: '1px solid #d1d5db', borderRadius: 6, background: '#fff', fontSize: 14, cursor: 'pointer' }}>取消</button>
+                <button onClick={submitReport} style={{ padding: '8px 20px', background: '#1e40af', color: '#fff', border: 'none', borderRadius: 6, fontSize: 14, cursor: 'pointer' }}>提交报告</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 审核报告弹窗 */}
+      {auditModalVisible && auditRecord && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }} onClick={() => setAuditModalVisible(false)}>
+          <div style={{ background: '#fff', borderRadius: 12, width: 560, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '20px 24px', borderBottom: '2px solid #3b82f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#3b82f6', color: '#fff' }}>
+              <span style={{ fontSize: 16, fontWeight: 600 }}>🔍 审核报告 — {auditRecord.examId}</span>
+              <button onClick={() => setAuditModalVisible(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer' }}>×</button>
+            </div>
+            <div style={{ padding: 24 }}>
+              <div style={{ marginBottom: 16, padding: 12, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: 14, color: '#475569' }}>
+                  <strong>{auditRecord.patientName}</strong> · {auditRecord.gender}/{auditRecord.age}岁 · {auditRecord.dept}<br/>
+                  诊断：{auditRecord.diagnosis} · 报告医生：{auditRecord.doctor}
+                </div>
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 8 }}>审核意见</label>
+                <textarea
+                  value={auditOpinion}
+                  onChange={e => setAuditOpinion(e.target.value)}
+                  placeholder="请输入审核意见..."
+                  style={{ width: '100%', minHeight: 120, padding: 12, border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14, resize: 'vertical', outline: 'none' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                <button onClick={() => setAuditModalVisible(false)} style={{ padding: '8px 20px', border: '1px solid #d1d5db', borderRadius: 6, background: '#fff', fontSize: 14, cursor: 'pointer' }}>取消</button>
+                <button onClick={() => submitAudit(false)} style={{ padding: '8px 20px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 6, fontSize: 14, cursor: 'pointer' }}>驳回</button>
+                <button onClick={() => submitAudit(true)} style={{ padding: '8px 20px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, fontSize: 14, cursor: 'pointer' }}>通过审核</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
