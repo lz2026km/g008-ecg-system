@@ -8,6 +8,11 @@ import CriticalValuePage from './pages/CriticalValuePage'
 import RegionalECGPage from './pages/RegionalECGPage'
 import StatisticsPage from './pages/StatisticsPage'
 import SettingsPage from './pages/SettingsPage'
+import HQPage from './pages/HQPage'
+import TodoCenterPage from './pages/TodoCenterPage'
+import DeviceManagementPage from './pages/DeviceManagementPage'
+import UserRolePage from './pages/UserRolePage'
+import QualityMetricsPage from './pages/QualityMetricsPage'
 
 function App() {
   return (
@@ -23,6 +28,11 @@ function App() {
           <Route path="g008/regional" element={<RegionalECGPage />} />
           <Route path="g008/statistics" element={<StatisticsPage />} />
           <Route path="g008/settings" element={<SettingsPage />} />
+          <Route path="g008/hq" element={<HQPage />} />
+          <Route path="g008/todo" element={<TodoCenterPage />} />
+          <Route path="g008/devices" element={<DeviceManagementPage />} />
+          <Route path="g008/users" element={<UserRolePage />} />
+          <Route path="g008/quality" element={<QualityMetricsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
